@@ -163,4 +163,9 @@ public class InMemoryMetricsRepository implements MetricsRepository<MetricEntity
             readWriteLock.readLock().unlock();
         }
     }
+
+    @Override
+    public int getOrder() {
+        return 0;
+    }
 }

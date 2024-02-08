@@ -15,6 +15,8 @@
  */
 package com.alibaba.csp.sentinel.dashboard.repository.metric;
 
+import org.springframework.core.Ordered;
+
 import java.util.List;
 
 /**
@@ -23,7 +25,7 @@ import java.util.List;
  * @param <T> type of metrics
  * @author Eric Zhao
  */
-public interface MetricsRepository<T> {
+public interface MetricsRepository<T> extends Ordered {
 
     /**
      * Save the metric to the storage repository.

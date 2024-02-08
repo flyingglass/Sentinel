@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 
 import com.alibaba.csp.sentinel.util.StringUtil;
 
@@ -33,11 +34,12 @@ public class AppManagement implements MachineDiscovery {
     @Autowired
     private ApplicationContext context;
 
+    @Resource
     private MachineDiscovery machineDiscovery;
 
     @PostConstruct
     public void init() {
-        machineDiscovery = context.getBean(SimpleMachineDiscovery.class);
+        machineDiscovery = context.getBean(InRedisMachineDiscovery.class);
     }
 
     @Override

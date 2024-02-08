@@ -15,12 +15,13 @@
  */
 package com.alibaba.csp.sentinel.dashboard.discovery;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import com.alibaba.csp.sentinel.dashboard.config.DashboardConfig;
 import com.alibaba.csp.sentinel.util.StringUtil;
 
-public class MachineInfo implements Comparable<MachineInfo> {
+public class MachineInfo implements Comparable<MachineInfo>, Serializable {
 
     private String app = "";
     private Integer appType = 0;

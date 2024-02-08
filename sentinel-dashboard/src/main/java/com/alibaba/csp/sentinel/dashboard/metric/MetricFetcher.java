@@ -56,10 +56,15 @@ import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
 
 /**
  * Fetch metric of machines.
@@ -75,15 +80,21 @@ public class MetricFetcher {
     private static final long FETCH_INTERVAL_SECOND = 6;
     private static final Charset DEFAULT_CHARSET = Charset.forName(SentinelConfig.charset());
     private final static String METRIC_URL_PATH = "metric";
+
+    private static final String SCHEDULER_DISTRIBUTED_LOCK = "sentinel:scheduler_distributed_lock";
     private static Logger logger = LoggerFactory.getLogger(MetricFetcher.class);
     private final long intervalSecond = 1;
 
     private Map<String, AtomicLong> appLastFetchTime = new ConcurrentHashMap<>();
 
     @Autowired
+    @Qualifier(value = "compositeMetricsRepository")
     private MetricsRepository<MetricEntity> metricStore;
     @Autowired
     private AppManagement appManagement;
+
+    @Resource
+    private RedissonClient redissonClient;
 
     private CloseableHttpAsyncClient httpclient;
 
@@ -126,11 +137,19 @@ public class MetricFetcher {
 
     private void start() {
         fetchScheduleService.scheduleAtFixedRate(() -> {
+            // For HA
+            // Add redisson distributed lock
+            RLock lock = redissonClient.getLock(SCHEDULER_DISTRIBUTED_LOCK);
             try {
-                fetchAllApp();
+                // tryLock, auto unlock by ttl, must keep fetch task within 1 second
+                boolean flag = lock.tryLock(1000L, 1000L, TimeUnit.MILLISECONDS);
+                if (flag) {
+                    fetchAllApp();
+                }
             } catch (Exception e) {
-                logger.info("fetchAllApp error:", e);
+                logger.error("Metric fetchAllApp got a error, exception:", e);
             }
+
         }, 10, intervalSecond, TimeUnit.SECONDS);
     }
 
