@@ -137,8 +137,8 @@ public class MetricFetcher {
 
     private void start() {
         fetchScheduleService.scheduleAtFixedRate(() -> {
-            // For HA
-            // Add redisson distributed lock
+            // TODO change server fetch to client report?
+            // For Standby HA by adding redisson distributed lock
             RLock lock = redissonClient.getLock(SCHEDULER_DISTRIBUTED_LOCK);
             try {
                 // tryLock, auto unlock by ttl, must keep fetch task within 1 second
